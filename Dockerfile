@@ -336,6 +336,26 @@ RUN --mount=type=cache,id=openclaw-bookworm-apt-cache,target=/var/cache/apt,shar
         docker-ce-cli docker-compose-plugin; \
     fi
 
+# Optionally install Intel GPU userspace libraries for hardware acceleration.
+# Build with: docker build --build-arg OPENCLAW_INSTALL_INTEL_GPU=1 ...
+# Required for Intel Arc / integrated GPU passthrough via /dev/dri on WSL2 and Linux.
+# Installs VA-API drivers, OpenCL runtime, and diagnostic tools (vainfo, clinfo).
+# Adds ~30MB to the image. At runtime, mount /dev/dri and add the render group.
+# See docs/platforms/wsl-intel-arc.md for setup instructions.
+ARG OPENCLAW_INSTALL_INTEL_GPU=""
+RUN --mount=type=cache,id=openclaw-bookworm-apt-cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,id=openclaw-bookworm-apt-lists,target=/var/lib/apt,sharing=locked \
+    if [ -n "$OPENCLAW_INSTALL_INTEL_GPU" ]; then \
+      apt-get update && \
+      DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        intel-media-va-driver-non-free \
+        libva-drm2 \
+        libva2 \
+        intel-opencl-icd \
+        clinfo \
+        vainfo; \
+    fi
+
 # Expose the CLI binary without requiring npm global writes as non-root.
 RUN ln -sf /app/openclaw.mjs /usr/local/bin/openclaw \
  && chmod 755 /app/openclaw.mjs
