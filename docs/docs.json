@@ -1562,6 +1562,7 @@
                   "platforms/macos",
                   "platforms/linux",
                   "platforms/windows",
+                  "platforms/wsl-intel-arc",
                   "platforms/android",
                   "platforms/ios",
                   "platforms/ios-healthkit",
